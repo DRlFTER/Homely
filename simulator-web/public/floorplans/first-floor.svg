@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#e7e1d6"/>
+  <g fill="#f8f4ec" stroke="#756f63" stroke-width="14">
+    <path d="M80 80h1040v640H80z"/>
+    <path d="M80 80h510v400H80zM590 80h530v400H590zM80 480h360v240H80zM440 480h680v240H440z"/>
+  </g>
+  <g fill="none" stroke="#b7ae9f" stroke-width="10"><path d="M320 80v52m270 150h52M80 600h62m610-120v58"/></g>
+  <g fill="#d7d0c3" font-family="system-ui" font-size="34" font-weight="600">
+    <text x="220" y="280">BEDROOM</text><text x="770" y="280">STUDY</text><text x="195" y="620">BATH</text><text x="690" y="620">LANDING</text>
+  </g>
+</svg>

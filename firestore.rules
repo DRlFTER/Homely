@@ -1,0 +1,98 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function home(homeId) {
+      return get(/databases/$(database)/documents/homes/$(homeId));
+    }
+
+    function isHomeMember(homeId) {
+      return signedIn()
+        && home(homeId).data != null
+        && (
+          home(homeId).data.ownerId == request.auth.uid
+          || request.auth.uid in home(homeId).data.get('memberIds', [])
+        );
+    }
+
+    function isHomeOwner(homeId) {
+      return signedIn() && home(homeId).data.ownerId == request.auth.uid;
+    }
+
+    function validStatus() {
+      return request.resource.data.status in ['ON', 'OFF', 'ERROR', 'DISCONNECTED'];
+    }
+
+    function validDeviceIntentUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'capabilities', 'updatedAt', 'updatedBy'])
+        && request.resource.data.type == resource.data.type
+        && validStatus()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.capabilities.diff(resource.data.capabilities).affectedKeys()
+          .hasOnly(['isOn', 'switches', 'maxOnDurationMinutes']);
+    }
+
+    function validSchedule() {
+      return request.resource.data.deviceId is string
+        && request.resource.data.enabled is bool
+        && request.resource.data.startTime is string
+        && request.resource.data.endTime is string
+        && request.resource.data.daysOfWeek is list
+        && request.resource.data.daysOfWeek.size() > 0
+        && request.resource.data.daysOfWeek.size() <= 7;
+    }
+
+    match /homes/{homeId} {
+      allow read: if isHomeMember(homeId);
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isHomeOwner(homeId)
+        && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+
+      match /floors/{floorId} {
+        allow read: if isHomeMember(homeId);
+        allow write: if isHomeOwner(homeId);
+      }
+
+      match /devices/{deviceId} {
+        allow read: if isHomeMember(homeId);
+        allow create, delete: if isHomeOwner(homeId);
+        allow update: if isHomeMember(homeId) && validDeviceIntentUpdate();
+      }
+
+      match /schedules/{scheduleId} {
+        allow read, delete: if isHomeMember(homeId);
+        allow create, update: if isHomeMember(homeId) && validSchedule();
+      }
+
+      match /usageRecords/{recordId} {
+        allow read: if isHomeMember(homeId);
+        allow write: if false;
+      }
+
+      match /alerts/{alertId} {
+        allow read: if isHomeMember(homeId);
+        allow update: if isHomeMember(homeId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acknowledged'])
+          && request.resource.data.acknowledged is bool;
+        allow create, delete: if false;
+      }
+
+      match /fcmTokens/{tokenId} {
+        allow read: if false;
+        allow create, update: if isHomeMember(homeId)
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.token is string;
+        allow delete: if isHomeMember(homeId)
+          && resource.data.userId == request.auth.uid;
+      }
+    }
+  }
+}

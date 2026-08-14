@@ -1,0 +1,43 @@
+# Node
+node_modules/
+.npm-cache/
+.tools/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+storage-debug.log
+*-debug.log
+service-account*.json
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+google-services.json
+!google-services.json.example
+local.properties
+
+# Android / Gradle
+.gradle/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.jks
+*.keystore
+
+# IDE and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

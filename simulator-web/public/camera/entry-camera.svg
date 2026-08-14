@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600">
+  <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#85a9ad"/><stop offset="1" stop-color="#d6cbb6"/></linearGradient></defs>
+  <rect width="960" height="600" fill="url(#sky)"/>
+  <path d="M0 450 300 290l285 160v150H0z" fill="#53696a"/><path d="m380 380 210-155 265 205v170H380z" fill="#e4dfd3"/>
+  <path d="M570 600V410h115v190" fill="#263d3e"/><path d="M720 445h92v88h-92z" fill="#aac5c4"/>
+  <path d="M0 518c220-52 400-45 560 8 127 42 260 42 400-2v76H0z" fill="#536d53"/>
+  <g fill="#eef3eb" font-family="monospace" font-size="20"><text x="28" y="42">ENTRY CAMERA · LIVE MOCK</text><text x="795" y="42">CAM 01</text></g>
+  <circle cx="763" cy="35" r="8" fill="#e85a4f"/>
+</svg>

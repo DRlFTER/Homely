@@ -1,0 +1,9 @@
+{
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "replace-with-firebase-project-id",
+    "storage_bucket": "replace-with-firebase-project-id.appspot.com"
+  },
+  "client": []
+}
+

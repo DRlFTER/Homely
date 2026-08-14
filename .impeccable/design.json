@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-15T00:10:00+05:30",
+  "title": "Design System: Homely Android",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Deep Utility Green", "canonical": "#195E58", "tonalRamp": ["#06201E", "#0C3531", "#134B46", "#195E58", "#3D7F79", "#70AAA4", "#A8D8D3", "#E3F4F1"] },
+      "secondary-live": { "role": "secondary", "displayName": "Task-Light Amber", "canonical": "#805610", "tonalRamp": ["#241600", "#3D2800", "#5B3B00", "#805610", "#A97625", "#D09B49", "#F3C878", "#FFF0D2"] },
+      "tertiary-foliage": { "role": "tertiary", "displayName": "Garden Foliage", "canonical": "#53643E", "tonalRamp": ["#151D0B", "#273219", "#3C492B", "#53643E", "#71835A", "#99AA80", "#C3D2AA", "#EEF5E2"] },
+      "safety": { "role": "primary", "displayName": "Safety Red", "canonical": "#9D2E2E", "tonalRamp": ["#310507", "#510C10", "#74191C", "#9D2E2E", "#C34F4D", "#E57D78", "#F9B5AF", "#FFE9E6"] },
+      "plaster-background": { "role": "neutral", "displayName": "Matte Plaster", "canonical": "#F8F5EC", "tonalRamp": ["#25241F", "#45433C", "#68655C", "#8E8A80", "#B3AFA5", "#D2CEC4", "#E8E4DA", "#F8F5EC"] },
+      "paper-surface": { "role": "neutral", "displayName": "Warm Paper", "canonical": "#FFFCF3", "tonalRamp": ["#292821", "#4B4941", "#706D64", "#99958B", "#C0BCB2", "#DDD9CF", "#F0ECE2", "#FFFCF3"] },
+      "architectural-ink": { "role": "neutral", "displayName": "Architectural Ink", "canonical": "#1C1C18", "tonalRamp": ["#1C1C18", "#353530", "#55554E", "#77776F", "#9B9A91", "#C0BFB5", "#E1E0D6", "#F8F7ED"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Rare product-level statements." },
+      "headline": { "displayName": "Headline", "purpose": "Top-level Android destinations." },
+      "title": { "displayName": "Title", "purpose": "Devices, sheets, and sections." },
+      "body": { "displayName": "Body", "purpose": "State, instructions, errors, and recovery." },
+      "label": { "displayName": "Label", "purpose": "Actions, filters, status, and compact metrics." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "state-change", "value": "Material short state transition", "purpose": "Explain a changed value without delaying the next action." }
+    ],
+    "breakpoints": [
+      { "name": "expanded-navigation", "value": "840dp" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A native Android primary action represented for the design panel.",
+      "html": "<button class=\"ds-btn-primary\">Save schedule</button>",
+      "css": ".ds-btn-primary{min-height:48px;padding:12px 24px;border:0;border-radius:999px;background:#195E58;color:#fff;font:600 14px/20px system-ui;transition:filter .16s ease-out}.ds-btn-primary:hover{filter:brightness(1.08)}.ds-btn-primary:focus-visible{outline:3px solid #FFDDA4;outline-offset:2px}.ds-btn-primary:active{filter:brightness(.94)}"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "description": "Floor and schedule selection with stable checked state.",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"true\">Ground floor</button>",
+      "css": ".ds-chip{min-height:40px;padding:8px 16px;border:1px solid #757870;border-radius:999px;background:#A8F2E9;color:#00201D;font:600 14px/20px system-ui}.ds-chip:hover{filter:brightness(.98)}.ds-chip:focus-visible{outline:3px solid #805610;outline-offset:2px}.ds-chip:active{filter:brightness(.94)}"
+    },
+    {
+      "name": "Warm Surface Card",
+      "kind": "card",
+      "description": "Tonal content grouping without decorative shadow.",
+      "html": "<section class=\"ds-card\"><strong>Entry camera</strong><span>Connected · just now</span></section>",
+      "css": ".ds-card{display:grid;gap:8px;padding:16px;border-radius:12px;background:#FFFCF3;color:#1C1C18;font:400 16px/24px system-ui}.ds-card strong{font-weight:600}.ds-card span{color:#454740}.ds-card:focus-within{outline:3px solid #A8F2E9}"
+    },
+    {
+      "name": "Device Marker",
+      "kind": "custom",
+      "refersTo": "device-marker",
+      "description": "A 48 dp positioned floor-plan control with type and state cues.",
+      "html": "<button class=\"ds-marker\" aria-label=\"Kitchen light, on\">L</button>",
+      "css": ".ds-marker{width:48px;height:48px;border:3px solid #805610;border-radius:50%;background:#195E58;color:#fff;font:800 14px/20px system-ui;box-shadow:0 4px 12px rgba(28,28,24,.18)}.ds-marker:hover{filter:brightness(1.08)}.ds-marker:focus-visible{outline:3px solid #FFDDA4;outline-offset:3px}.ds-marker:active{transform:scale(.96)}"
+    },
+    {
+      "name": "Outlined Time Field",
+      "kind": "input",
+      "description": "Persistent-label schedule input with a visible unit.",
+      "html": "<label class=\"ds-field\"><span>Start (HH:mm)</span><input value=\"18:00\"></label>",
+      "css": ".ds-field{display:grid;gap:4px;color:#454740;font:600 12px/16px system-ui}.ds-field input{min-height:48px;padding:0 14px;border:1px solid #757870;border-radius:12px;background:#FFFCF3;color:#1C1C18;font:400 16px/24px system-ui}.ds-field input:hover{border-color:#195E58}.ds-field input:focus-visible{outline:3px solid #A8F2E9;border-color:#195E58}"
+    },
+    {
+      "name": "Adaptive Navigation",
+      "kind": "nav",
+      "description": "Peer destinations with a compact selected treatment.",
+      "html": "<nav class=\"ds-nav\"><a class=\"is-active\">Home</a><a>Schedules</a><a>Reports</a><a>Alerts</a></nav>",
+      "css": ".ds-nav{display:flex;gap:8px;padding:8px;border-radius:18px;background:#FFFCF3;font:600 13px/18px system-ui}.ds-nav a{padding:10px 12px;border-radius:999px;color:#454740}.ds-nav a.is-active{background:#A8F2E9;color:#00201D}.ds-nav a:hover{background:#E4E3D9}.ds-nav a:focus-visible{outline:3px solid #805610;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Lived-in Light",
+    "overview": "Homely treats the floor plan as the home’s living control surface. Active devices add restrained amber illumination to their physical rooms while green controls, architectural linework, and explicit safety labels keep the interface operational rather than decorative.\n\nThe system is calm, spatial, and safety-conscious. It borrows clarity, feedback strength, and adaptive hierarchy from Apple’s design principles while preserving Android’s Material 3 controls, navigation, system Back behavior, and accessibility semantics.",
+    "keyCharacteristics": [
+      "Warm residential surfaces with precise architectural ink.",
+      "The floor plan is the Home screen’s focal element.",
+      "Live atmosphere never replaces a semantic status cue.",
+      "Configuration remains one level deeper than immediate control.",
+      "Compact and expanded windows preserve destination meaning."
+    ],
+    "rules": [
+      { "name": "The Semantic Reserve Rule", "body": "Red communicates errors and safety intervention only; amber communicates live atmosphere only.", "section": "colors" },
+      { "name": "The Two-Cue Rule", "body": "No device state is expressed by color alone. Pair it with a label, symbol, border treatment, or accessibility state description.", "section": "colors" },
+      { "name": "The Reflow Rule", "body": "Important names, errors, and safety explanations reflow under font scaling; truncation is limited to secondary metadata.", "section": "typography" },
+      { "name": "The Tonal-First Rule", "body": "Use container color and spatial separation before adding elevation; elevation exists to explain layering or selection.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do make the home’s spatial state understandable before showing aggregate metrics.",
+      "Do wait for Firestore-driven truth and expose pending or failed commands.",
+      "Do pair every safety event with calm explanatory copy and a durable history record.",
+      "Do keep common control immediate and move schedules or duration configuration one level deeper.",
+      "Do preserve 48 dp targets, TalkBack names and states, dark appearance, and system navigation behavior."
+    ],
+    "donts": [
+      "Don't turn Homely into a generic grid of equal-emphasis smart-home cards.",
+      "Don't imitate Apple controls, SF Symbols, glass materials, or tab-bar styling on Android.",
+      "Don't use amber as proof that a device is ON or red for ordinary emphasis.",
+      "Don't add ambient looping motion, flashing, fake hardware bevels, or decorative technical typography.",
+      "Don't present a client countdown as the authoritative safety mechanism."
+    ]
+  }
+}

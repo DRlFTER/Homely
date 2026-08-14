@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isHomeMember(homeId) {
+      let home = firestore.get(/databases/(default)/documents/homes/$(homeId));
+      return signedIn()
+        && (
+          home.data.ownerId == request.auth.uid
+          || request.auth.uid in home.data.get('memberIds', [])
+        );
+    }
+
+    match /homes/{homeId}/{allPaths=**} {
+      allow read: if isHomeMember(homeId);
+      allow write: if isHomeMember(homeId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+

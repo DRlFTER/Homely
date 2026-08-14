@@ -1,0 +1,72 @@
+{
+  "title": "Choose Homely's visual world",
+  "question": "Keep the home-centred direction, take an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Lived-in Light",
+      "kicker": "THE ROLL",
+      "lineage": "quiet domestic lighting scenes and architectural floor plans",
+      "thesis": "The floor plan is the interface, and live device state visibly changes the home's light and safety atmosphere.",
+      "palette": ["#F4F0E6", "#173E3A", "#E7A94B", "#A33E3E"],
+      "materials": ["matte plaster", "warm task light", "architectural ink"],
+      "viewport": "A large two-floor plan fills the screen; device nodes illuminate rooms while safety state stays anchored beneath the plan.",
+      "risk": "Atmosphere cannot weaken status contrast, so every glow is paired with a semantic label and shape.",
+      "sketch": ".impeccable/sketches/assigned.png"
+    },
+    {
+      "id": "challenger-nixie",
+      "label": "Nixie Home Counter",
+      "lineage": "nixie-tube laboratory counters and blackened instrument panels",
+      "thesis": "Every home metric becomes a glowing physical reading with precise mechanical controls.",
+      "palette": ["#171816", "#F07B32", "#6F7774", "#F0E6D3"],
+      "materials": ["blackened steel", "glass envelopes", "engraved labels"],
+      "viewport": "Orange readings and fixed control banks lead, with the floor plan condensed below.",
+      "risk": "Excellent hardware identity, but it separates residents from the spatial home context.",
+      "case": "Strong product clarity for telemetry, but weaker audience identification than the home-centred direction.",
+      "sketch": ".impeccable/sketches/challenger-nixie.png",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-nixie-laboratory-counter-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/signals-instruments-nixie-laboratory-counter.webp"
+    },
+    {
+      "id": "challenger-pop",
+      "label": "Saturated Room Set",
+      "lineage": "French pop record sleeves on flat saturated grounds",
+      "thesis": "Each floor owns one confident color field and devices read like a small, closed track list.",
+      "palette": ["#EA7041", "#1A8B89", "#FFF8E9", "#2B3032"],
+      "materials": ["flat printed color", "warm photography", "rounded lettering"],
+      "viewport": "One saturated floor fills the frame with four device controls tucked into a tidy edge list.",
+      "risk": "The release-cover grammar is memorable but fuses poorly with safety history and dense configuration.",
+      "case": "High recognition at a glance, but lower product clarity for reports, schedules and safety events.",
+      "sketch": ".impeccable/sketches/challenger-pop.png",
+      "hero": "https://impeccable.style/worlds/cards/posters-covers-sleeves-yeye-pop-sleeve-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/posters-covers-sleeves-yeye-pop-sleeve.webp"
+    },
+    {
+      "id": "challenger-bitmap",
+      "label": "Pixel Service Manual",
+      "lineage": "Emigre bitmap specimens and appliance service documentation",
+      "thesis": "Coarse state lettering and fine technical annotations turn the home into a precise living specimen.",
+      "palette": ["#F4F1E8", "#111111", "#2859D8", "#D95A3A"],
+      "materials": ["newsprint", "pixel type", "technical annotation"],
+      "viewport": "A poster-scale floor status sits above dense but ordered device and safety annotations.",
+      "risk": "Distinctive typography risks reducing legibility at large text settings and on dense control screens.",
+      "case": "Clear technical authorship, but weaker accessibility and domestic familiarity than the assigned direction.",
+      "sketch": ".impeccable/sketches/challenger-bitmap.png",
+      "hero": "https://impeccable.style/worlds/cards/emigre-bitmap-specimen-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/emigre-bitmap-specimen.webp"
+    }
+  ],
+  "reroll": true,
+  "canon": true,
+  "canonCard": {
+    "label": "Material smart-home standard",
+    "thesis": "A conventional Material 3 dashboard, executed with excellent hierarchy and native behavior.",
+    "palette": ["#F7F7F5", "#355F5B", "#DDE8E5", "#B3261E"],
+    "materials": ["tonal surfaces", "standard Material components"],
+    "viewport": "A top app bar, summary tiles, compact floor plan card and familiar bottom navigation.",
+    "risk": "Immediately usable, but less memorable and less spatially specific to Homely.",
+    "sketch": ".impeccable/sketches/canon.png"
+  },
+  "steer": true
+}

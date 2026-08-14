@@ -1,0 +1,21 @@
+{
+  "name": "homely-smart-home",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@11.12.1",
+  "scripts": {
+    "setup:check": "node scripts/check-setup.mjs",
+    "build": "npm --prefix functions run build && npm --prefix simulator-web run build",
+    "check": "npm --prefix functions run check && npm --prefix simulator-web run check",
+    "test": "npm --prefix functions test",
+    "android:check": "cd android-app && gradlew.bat testDebugUnitTest lintDebug",
+    "dev:simulator": "npm --prefix simulator-web run dev",
+    "emulators": "node scripts/start-emulators.mjs --import=.firebase-data --export-on-exit=.firebase-data",
+    "emulators:fresh": "node scripts/start-emulators.mjs",
+    "firebase": "firebase",
+    "seed": "npm --prefix functions run seed"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
