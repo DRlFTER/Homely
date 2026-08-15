@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -62,6 +63,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -102,6 +104,7 @@ import com.homely.smarthome.core.model.DeviceSchedule
 import com.homely.smarthome.core.model.DeviceStatus
 import com.homely.smarthome.core.model.DeviceType
 import com.homely.smarthome.core.model.Floor
+import com.homely.smarthome.core.model.FloorValidation
 import com.homely.smarthome.core.model.HomeAlert
 import com.homely.smarthome.core.model.UsageEndReason
 import com.homely.smarthome.core.model.UsageRecord
@@ -172,6 +175,8 @@ fun HomelyApp(viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Facto
                         onPowerChanged = viewModel::setDevicePower,
                         onSwitchChanged = viewModel::setSwitch,
                         onSafetyDurationChanged = viewModel::setSafetyDuration,
+                        onFloorSaved = viewModel::saveFloor,
+                        onFloorDeleted = viewModel::deleteFloor,
                     )
                 }
                 composable(Destination.Schedules.route) {
@@ -318,7 +323,11 @@ private fun DashboardScreen(
     onPowerChanged: (Device, Boolean) -> Unit,
     onSwitchChanged: (Device, String, Boolean) -> Unit,
     onSafetyDurationChanged: (Device, Int) -> Unit,
+    onFloorSaved: (Floor) -> Unit,
+    onFloorDeleted: (String) -> Unit,
 ) {
+    var showFloorManager by rememberSaveable { mutableStateOf(false) }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(20.dp),
@@ -329,16 +338,27 @@ private fun DashboardScreen(
             Text("${state.devices.count { it.status == DeviceStatus.ON }} devices active · realtime")
         }
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                state.floors.forEach { floor ->
-                    FilterChip(
-                        selected = floor.id == state.selectedFloor?.id,
-                        onClick = { onFloorSelected(floor.id) },
-                        label = { Text(floor.name) },
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    state.floors.forEach { floor ->
+                        FilterChip(
+                            selected = floor.id == state.selectedFloor?.id,
+                            onClick = { onFloorSelected(floor.id) },
+                            label = { Text(floor.name) },
+                        )
+                    }
+                }
+                OutlinedButton(
+                    onClick = {
+                        onDeviceSelected(null)
+                        showFloorManager = true
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Manage floors")
                 }
             }
         }
@@ -361,6 +381,19 @@ private fun DashboardScreen(
         }
     }
 
+    if (showFloorManager) {
+        ModalBottomSheet(onDismissRequest = { showFloorManager = false }) {
+            FloorManagementSheet(
+                floors = state.floors,
+                devices = state.devices,
+                pendingIds = state.pendingIds,
+                onSave = onFloorSaved,
+                onDelete = onFloorDeleted,
+                onClose = { showFloorManager = false },
+            )
+        }
+    }
+
     state.selectedDevice?.let { device ->
         ModalBottomSheet(onDismissRequest = { onDeviceSelected(null) }) {
             DeviceDetailSheet(
@@ -372,6 +405,237 @@ private fun DashboardScreen(
                 onSwitchChanged = onSwitchChanged,
                 onSafetyDurationChanged = onSafetyDurationChanged,
             )
+        }
+    }
+}
+
+private const val NewFloorEditorId = "__new_floor__"
+
+@Composable
+private fun FloorManagementSheet(
+    floors: List<Floor>,
+    devices: List<Device>,
+    pendingIds: Set<String>,
+    onSave: (Floor) -> Unit,
+    onDelete: (String) -> Unit,
+    onClose: () -> Unit,
+) {
+    var editingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var deleteCandidate by remember { mutableStateOf<Floor?>(null) }
+    val editingFloor = floors.firstOrNull { it.id == editingId }
+    val isNewFloor = editingId == NewFloorEditorId
+
+    if (editingId == null) {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                Text("Manage floors", style = MaterialTheme.typography.headlineSmall)
+                Text("Add a floor plan or update its grid before placing devices.")
+            }
+            item {
+                Button(
+                    onClick = { editingId = NewFloorEditorId },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Add floor plan")
+                }
+            }
+            if (floors.isEmpty()) {
+                item {
+                    Card {
+                        Text(
+                            "No floor plans yet. Add one to create the dashboard grid.",
+                            modifier = Modifier.padding(18.dp),
+                        )
+                    }
+                }
+            }
+            items(floors, key = { it.id }) { floor ->
+                val deviceCount = devices.count { it.floorId == floor.id }
+                val canDelete = floors.size > 1 && deviceCount == 0 && floor.id !in pendingIds
+                Card {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(floor.name, style = MaterialTheme.typography.titleMedium)
+                                Text("${floor.gridColumns} columns × ${floor.gridRows} rows")
+                                if (floor.imageUrl.isNotBlank()) {
+                                    Text("Background image configured", style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
+                            OutlinedButton(onClick = { editingId = floor.id }) {
+                                Text("Edit")
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = when {
+                                    deviceCount > 0 -> "$deviceCount device${if (deviceCount == 1) "" else "s"} assigned"
+                                    floors.size == 1 -> "Keep at least one floor"
+                                    else -> "No devices assigned"
+                                },
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(
+                                enabled = canDelete,
+                                onClick = { deleteCandidate = floor },
+                            ) {
+                                Text(if (canDelete) "Delete" else "Cannot delete")
+                            }
+                        }
+                    }
+                }
+            }
+            item {
+                OutlinedButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
+                    Text("Done")
+                }
+            }
+        }
+    } else {
+        FloorEditorForm(
+            initial = editingFloor ?: Floor(
+                id = if (isNewFloor) "" else editingId.orEmpty(),
+                sortOrder = floors.size,
+            ),
+            pending = pendingIds.contains(
+                FloorValidation.operationId(
+                    editingFloor ?: Floor(id = if (isNewFloor) "" else editingId.orEmpty()),
+                ),
+            ),
+            onBack = { editingId = null },
+            onSave = { floor ->
+                onSave(floor)
+                editingId = null
+            },
+        )
+    }
+
+    deleteCandidate?.let { floor ->
+        AlertDialog(
+            onDismissRequest = { deleteCandidate = null },
+            title = { Text("Delete ${floor.name}?") },
+            text = { Text("This removes the floor plan from the home. Devices must be moved first.") },
+            dismissButton = {
+                TextButton(onClick = { deleteCandidate = null }) { Text("Cancel") }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete(floor.id)
+                        deleteCandidate = null
+                    },
+                ) {
+                    Text("Delete")
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun FloorEditorForm(
+    initial: Floor,
+    pending: Boolean,
+    onBack: () -> Unit,
+    onSave: (Floor) -> Unit,
+) {
+    var name by remember(initial.id) { mutableStateOf(initial.name) }
+    var imageUrl by remember(initial.id) { mutableStateOf(initial.imageUrl) }
+    var rowsText by remember(initial.id) { mutableStateOf(initial.gridRows.toString()) }
+    var columnsText by remember(initial.id) { mutableStateOf(initial.gridColumns.toString()) }
+    var orderText by remember(initial.id) { mutableStateOf(initial.sortOrder.toString()) }
+
+    val draft = Floor(
+        id = initial.id,
+        name = name,
+        imageUrl = imageUrl,
+        gridRows = rowsText.toIntOrNull() ?: -1,
+        gridColumns = columnsText.toIntOrNull() ?: -1,
+        sortOrder = orderText.toIntOrNull() ?: -1,
+    )
+    val validationError = FloorValidation.errorFor(draft)
+
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onBack) { Text("Back") }
+                Text(
+                    if (initial.id.isBlank()) "Add floor plan" else "Edit floor plan",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            }
+            Text("The grid controls where devices appear on this floor.")
+        }
+        item {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it.take(FloorValidation.MAX_NAME_LENGTH + 1) },
+                label = { Text("Floor name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        item {
+            OutlinedTextField(
+                value = imageUrl,
+                onValueChange = { imageUrl = it.take(FloorValidation.MAX_IMAGE_URL_LENGTH + 1) },
+                label = { Text("Background image URL (optional)") },
+                supportingText = { Text("Leave empty to use the built-in abstract plan.") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = columnsText,
+                    onValueChange = { columnsText = it.filter(Char::isDigit).take(2) },
+                    label = { Text("Columns") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = rowsText,
+                    onValueChange = { rowsText = it.filter(Char::isDigit).take(2) },
+                    label = { Text("Rows") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+        item {
+            OutlinedTextField(
+                value = orderText,
+                onValueChange = { orderText = it.filter(Char::isDigit).take(3) },
+                label = { Text("Display order") },
+                supportingText = { Text("Lower numbers appear first.") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        validationError?.let { message ->
+            item { Text(message, color = MaterialTheme.colorScheme.error) }
+        }
+        item {
+            Button(
+                onClick = { onSave(draft) },
+                enabled = validationError == null && !pending,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(if (pending) "Saving…" else "Save floor")
+            }
         }
     }
 }

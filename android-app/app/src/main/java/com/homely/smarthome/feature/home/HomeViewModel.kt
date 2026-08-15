@@ -9,6 +9,7 @@ import com.homely.smarthome.core.data.HomeRepository
 import com.homely.smarthome.core.model.Device
 import com.homely.smarthome.core.model.DeviceSchedule
 import com.homely.smarthome.core.model.Floor
+import com.homely.smarthome.core.model.FloorValidation
 import com.homely.smarthome.core.model.HomeAlert
 import com.homely.smarthome.core.model.UsageRecord
 import kotlinx.coroutines.flow.Flow
@@ -82,6 +83,22 @@ class HomeViewModel(
         mutableState.update { it.copy(selectedFloorId = floorId, selectedDeviceId = null) }
     }
 
+    fun saveFloor(floor: Floor) = runCommand(FloorValidation.operationId(floor)) {
+        repository.saveFloor(floor.copy(name = floor.name.trim(), imageUrl = floor.imageUrl.trim()))
+        mutableState.update { it.copy(confirmationMessage = "Floor saved") }
+    }
+
+    fun deleteFloor(floorId: String) = runCommand(floorId) {
+        repository.deleteFloor(floorId)
+        mutableState.update { current ->
+            if (current.selectedFloorId == floorId) {
+                current.copy(selectedFloorId = "", selectedDeviceId = null, confirmationMessage = "Floor deleted")
+            } else {
+                current.copy(confirmationMessage = "Floor deleted")
+            }
+        }
+    }
+
     fun selectDevice(deviceId: String?) {
         mutableState.update { it.copy(selectedDeviceId = deviceId) }
     }
@@ -115,9 +132,19 @@ class HomeViewModel(
         observe(repository.observeFloors()) { floors ->
             floorsLoaded = true
             mutableState.update { current ->
+                val selectedFloorId = when {
+                    current.selectedFloorId.isBlank() -> floors.firstOrNull()?.id.orEmpty()
+                    floors.any { it.id == current.selectedFloorId } -> current.selectedFloorId
+                    else -> floors.firstOrNull()?.id.orEmpty()
+                }
                 current.copy(
                     floors = floors,
-                    selectedFloorId = current.selectedFloorId.ifBlank { floors.firstOrNull()?.id.orEmpty() },
+                    selectedFloorId = selectedFloorId,
+                    selectedDeviceId = if (selectedFloorId == current.selectedFloorId) {
+                        current.selectedDeviceId
+                    } else {
+                        null
+                    },
                     loading = !(floorsLoaded && devicesLoaded),
                 )
             }

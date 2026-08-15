@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 interface HomeRepository {
     suspend fun signInDemo()
     fun observeFloors(): Flow<List<Floor>>
+    suspend fun saveFloor(floor: Floor)
+    suspend fun deleteFloor(floorId: String)
     fun observeDevices(): Flow<List<Device>>
     fun observeSchedules(): Flow<List<DeviceSchedule>>
     fun observeUsage(): Flow<List<UsageRecord>>
