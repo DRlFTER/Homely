@@ -19,6 +19,20 @@ function requiredEnvironmentValue(name: string, value: string | undefined): stri
   return value;
 }
 
+function firebaseEmulatorHost(): string {
+  const configuredHost = process.env.NEXT_PUBLIC_FIREBASE_EMULATOR_HOST?.trim();
+  if (configuredHost) return configuredHost;
+
+  if (typeof window !== "undefined") {
+    const browserHost = window.location.hostname;
+    if (browserHost && browserHost !== "0.0.0.0" && browserHost !== "::") {
+      return browserHost;
+    }
+  }
+
+  return "127.0.0.1";
+}
+
 export function getFirebaseClient(): FirebaseClient {
   if (client) {
     return client;
@@ -60,9 +74,10 @@ export function getFirebaseClient(): FirebaseClient {
   const storage = getStorage(app);
 
   if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true") {
-    connectAuthEmulator(auth, "http://127.0.0.1:9099", {disableWarnings: true});
-    connectFirestoreEmulator(db, "127.0.0.1", 8080);
-    connectStorageEmulator(storage, "127.0.0.1", 9199);
+    const emulatorHost = firebaseEmulatorHost();
+    connectAuthEmulator(auth, `http://${emulatorHost}:9099`, {disableWarnings: true});
+    connectFirestoreEmulator(db, emulatorHost, 8080);
+    connectStorageEmulator(storage, emulatorHost, 9199);
   }
 
   client = {app, auth, db, storage};
