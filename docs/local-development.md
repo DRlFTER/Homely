@@ -17,7 +17,7 @@ These credentials are created only in the local Auth emulator by `npm run seed`.
 4. `npm.cmd run seed`
 5. `npm.cmd run dev:simulator`
 
-Android emulator networking uses `10.0.2.2` to reach services on the development computer. The web simulator uses `127.0.0.1`.
+Android emulator networking uses `10.0.2.2` to reach services on the development computer. The web simulator uses its current browser hostname for Firebase emulators, so opening it at `http://192.168.1.8:3000` also works from a phone on the same LAN. The Auth, Firestore, and Storage emulators are bound to `0.0.0.0` for this device-testing workflow. Set `NEXT_PUBLIC_FIREBASE_EMULATOR_HOST` in `.env.local` when the emulator host needs to be different from the page hostname.
 
 On slower Windows machines, set `FUNCTIONS_DISCOVERY_TIMEOUT=60` before starting the suite. Firebase documents this environment variable as the supported fallback when CLI function discovery exceeds its default timeout. The local Pub/Sub emulator is included so scheduled Functions are registered during integration runs.
 

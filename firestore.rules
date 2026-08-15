@@ -48,6 +48,22 @@ service cloud.firestore {
         && request.resource.data.daysOfWeek.size() <= 7;
     }
 
+    function validFloor() {
+      return request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() <= 2048
+        && request.resource.data.gridRows is int
+        && request.resource.data.gridRows >= 1
+        && request.resource.data.gridRows <= 64
+        && request.resource.data.gridColumns is int
+        && request.resource.data.gridColumns >= 1
+        && request.resource.data.gridColumns <= 64
+        && request.resource.data.sortOrder is int
+        && request.resource.data.sortOrder >= 0;
+    }
+
     match /homes/{homeId} {
       allow read: if isHomeMember(homeId);
       allow create: if signedIn()
@@ -58,7 +74,8 @@ service cloud.firestore {
 
       match /floors/{floorId} {
         allow read: if isHomeMember(homeId);
-        allow write: if isHomeOwner(homeId);
+        allow create, update: if isHomeOwner(homeId) && validFloor();
+        allow delete: if isHomeOwner(homeId);
       }
 
       match /devices/{deviceId} {

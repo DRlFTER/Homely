@@ -18,11 +18,14 @@ import com.homely.smarthome.core.model.DeviceStatus
 import com.homely.smarthome.core.model.DeviceSwitch
 import com.homely.smarthome.core.model.DeviceType
 import com.homely.smarthome.core.model.Floor
+import com.homely.smarthome.core.model.FloorValidation
 import com.homely.smarthome.core.model.HomeAlert
 import com.homely.smarthome.core.model.UsageEndReason
 import com.homely.smarthome.core.model.UsageRecord
 import com.homely.smarthome.core.model.switches
 import java.security.MessageDigest
+import java.util.Locale
+import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.channels.awaitClose
@@ -50,6 +53,33 @@ class FirebaseHomeRepository(
         query = homeDocument.collection("floors").orderBy("sortOrder", Query.Direction.ASCENDING),
         mapper = ::floor,
     )
+
+    override suspend fun saveFloor(floor: Floor) {
+        FloorValidation.requireValid(floor)
+        val name = floor.name.trim()
+        val imageUrl = floor.imageUrl.trim()
+        val documentId = floor.id.ifBlank { newFloorId(name) }
+        homeDocument.collection("floors").document(documentId).set(
+            mapOf(
+                "name" to name,
+                "imageUrl" to imageUrl,
+                "gridRows" to floor.gridRows,
+                "gridColumns" to floor.gridColumns,
+                "sortOrder" to floor.sortOrder,
+            ),
+        ).awaitResult()
+    }
+
+    override suspend fun deleteFloor(floorId: String) {
+        require(floorId.isNotBlank()) { "Choose a floor before deleting it." }
+        val assignedDevices = homeDocument.collection("devices")
+            .whereEqualTo("floorId", floorId)
+            .limit(1)
+            .get()
+            .awaitResult()
+        require(assignedDevices.isEmpty) { "Move all devices off this floor before deleting it." }
+        homeDocument.collection("floors").document(floorId).delete().awaitResult()
+    }
 
     override fun observeDevices(): Flow<List<Device>> = snapshots(
         query = homeDocument.collection("devices"),
@@ -232,6 +262,16 @@ class FirebaseHomeRepository(
 
     private companion object {
         val TIME_PATTERN = Regex("^(?:[01]\\d|2[0-3]):[0-5]\\d$")
+
+        fun newFloorId(name: String): String {
+            val slug = name
+                .lowercase(Locale.ROOT)
+                .replace(Regex("[^a-z0-9]+"), "-")
+                .trim('-')
+                .take(40)
+                .ifBlank { "floor" }
+            return "$slug-${UUID.randomUUID().toString().take(8)}"
+        }
     }
 }
 

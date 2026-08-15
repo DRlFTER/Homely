@@ -12,4 +12,3 @@ class DeviceTest {
         assertEquals(DeviceType.OUTLET, device.type)
     }
 }
-
