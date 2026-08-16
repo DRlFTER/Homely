@@ -77,8 +77,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
@@ -654,6 +657,7 @@ private fun FloorPlan(
             val background = MaterialTheme.colorScheme.surfaceVariant
             val lineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.24f)
             Canvas(Modifier.fillMaxSize().clip(RoundedCornerShape(18.dp)).background(background)) {
+                drawFloorLayout(floor.imageUrl, lineColor)
                 devices.filter(Device::isOn).forEach { device ->
                     val center = Offset(
                         x = size.width * ((device.gridX - .5f) / floor.gridColumns),
@@ -665,22 +669,7 @@ private fun FloorPlan(
                         center = center,
                     )
                 }
-                repeat(floor.gridColumns + 1) { column ->
-                    val x = size.width * column / floor.gridColumns
-                    drawLine(lineColor, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1f)
-                }
-                repeat(floor.gridRows + 1) { row ->
-                    val y = size.height * row / floor.gridRows
-                    drawLine(lineColor, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
-                }
-                val wall = lineColor.copy(alpha = 0.78f)
-                drawLine(wall, Offset(size.width * .08f, size.height * .08f), Offset(size.width * .92f, size.height * .08f), 8f)
-                drawLine(wall, Offset(size.width * .08f, size.height * .08f), Offset(size.width * .08f, size.height * .92f), 8f)
-                drawLine(wall, Offset(size.width * .92f, size.height * .08f), Offset(size.width * .92f, size.height * .92f), 8f)
-                drawLine(wall, Offset(size.width * .08f, size.height * .92f), Offset(size.width * .92f, size.height * .92f), 8f)
-                drawLine(wall, Offset(size.width * .50f, size.height * .08f), Offset(size.width * .50f, size.height * .70f), 7f)
-                drawLine(wall, Offset(size.width * .08f, size.height * .52f), Offset(size.width * .35f, size.height * .52f), 7f)
-                drawLine(wall, Offset(size.width * .65f, size.height * .43f), Offset(size.width * .92f, size.height * .43f), 7f)
+                drawPlanGrid(floor.gridRows, floor.gridColumns, lineColor)
             }
             devices.forEach { device ->
                 val x = maxWidth * ((device.gridX - .5f) / floor.gridColumns) - 24.dp
@@ -694,6 +683,79 @@ private fun FloorPlan(
             }
         }
     }
+}
+
+private fun DrawScope.drawPlanGrid(rows: Int, columns: Int, lineColor: Color) {
+    repeat(columns + 1) { column ->
+        val x = size.width * column / columns
+        drawLine(lineColor, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1f)
+    }
+    repeat(rows + 1) { row ->
+        val y = size.height * row / rows
+        drawLine(lineColor, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
+    }
+}
+
+/**
+ * Draws the authored sample layout selected by the Firestore image URL.
+ *
+ * The Android client intentionally keeps these plans as vector geometry rather
+ * than downloading a web-only SVG path. This keeps the dashboard useful while
+ * offline and makes the grid/device overlay deterministic at every screen size.
+ * Unknown or empty URLs retain the editable abstract plan fallback.
+ */
+private fun DrawScope.drawFloorLayout(imageUrl: String, outline: Color) {
+    val scaleX = size.width / 1_200f
+    val scaleY = size.height / 800f
+    val strokeScale = (scaleX + scaleY) / 2f
+    val wall = Color(0xFF756F63)
+    val room = Color(0xFFF7F3EA)
+    val background = if (imageUrl.contains("first-floor", ignoreCase = true)) {
+        Color(0xFFE7E1D6)
+    } else {
+        Color(0xFFE9E3D7)
+    }
+
+    drawRect(background, size = size)
+
+    fun rect(left: Float, top: Float, right: Float, bottom: Float) {
+        val topLeft = Offset(left * scaleX, top * scaleY)
+        val rectSize = Size((right - left) * scaleX, (bottom - top) * scaleY)
+        drawRect(room, topLeft = topLeft, size = rectSize)
+        drawRect(
+            color = wall,
+            topLeft = topLeft,
+            size = rectSize,
+            style = Stroke(width = 14f * strokeScale),
+        )
+    }
+
+    if (imageUrl.contains("ground-floor", ignoreCase = true)) {
+        rect(80f, 80f, 1_120f, 720f)
+        rect(80f, 80f, 510f, 430f)
+        rect(510f, 80f, 1_120f, 310f)
+        rect(510f, 310f, 810f, 720f)
+        rect(810f, 310f, 1_120f, 720f)
+    } else if (imageUrl.contains("first-floor", ignoreCase = true)) {
+        rect(80f, 80f, 1_120f, 720f)
+        rect(80f, 80f, 590f, 480f)
+        rect(590f, 80f, 1_120f, 480f)
+        rect(80f, 480f, 440f, 720f)
+        rect(440f, 480f, 1_120f, 720f)
+    } else {
+        drawAbstractPlan(outline)
+    }
+}
+
+private fun DrawScope.drawAbstractPlan(outline: Color) {
+    val wall = outline.copy(alpha = 0.78f)
+    drawLine(wall, Offset(size.width * .08f, size.height * .08f), Offset(size.width * .92f, size.height * .08f), 8f)
+    drawLine(wall, Offset(size.width * .08f, size.height * .08f), Offset(size.width * .08f, size.height * .92f), 8f)
+    drawLine(wall, Offset(size.width * .92f, size.height * .08f), Offset(size.width * .92f, size.height * .92f), 8f)
+    drawLine(wall, Offset(size.width * .08f, size.height * .92f), Offset(size.width * .92f, size.height * .92f), 8f)
+    drawLine(wall, Offset(size.width * .50f, size.height * .08f), Offset(size.width * .50f, size.height * .70f), 7f)
+    drawLine(wall, Offset(size.width * .08f, size.height * .52f), Offset(size.width * .35f, size.height * .52f), 7f)
+    drawLine(wall, Offset(size.width * .65f, size.height * .43f), Offset(size.width * .92f, size.height * .43f), 7f)
 }
 
 @Composable
