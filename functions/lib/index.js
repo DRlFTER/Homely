@@ -137,6 +137,9 @@ async function closeUsageSession(deviceRef, homeRef, deviceId, before, after, ev
     });
 }
 exports.enforceSafetyCutoffs = (0, scheduler_1.onSchedule)("every 1 minutes", async () => {
+    await runSafetyCutoffScan("scheduler");
+});
+async function runSafetyCutoffScan(source) {
     const snapshot = await db.collectionGroup("devices")
         .where("type", "==", "SAFETY_OUTLET")
         .where("status", "==", "ON")
@@ -145,10 +148,25 @@ exports.enforceSafetyCutoffs = (0, scheduler_1.onSchedule)("every 1 minutes", as
         .filter((notice) => notice !== null);
     await Promise.all(notices.map(sendSafetyNotification));
     v2_1.logger.info("Safety cutoff scan complete", {
+        source,
         scanned: snapshot.size,
         cutoffs: notices.length,
     });
-});
+}
+/**
+ * Cloud Scheduler is not emulated locally. Keep the production scheduler above,
+ * and run the same server-side scan while the Functions emulator is active.
+ */
+const runningInEmulator = process.env.FUNCTIONS_EMULATOR === "true"
+    || Boolean(process.env.FIRESTORE_EMULATOR_HOST);
+if (runningInEmulator) {
+    const localSafetyScan = setInterval(() => {
+        void runSafetyCutoffScan("emulator").catch((error) => {
+            v2_1.logger.error("Local safety cutoff scan failed", { error });
+        });
+    }, 1_000);
+    localSafetyScan.unref();
+}
 async function enforceSafetyDevice(snapshot) {
     const deviceRef = snapshot.ref;
     const homeRef = deviceRef.parent.parent;

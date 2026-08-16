@@ -183,6 +183,10 @@ interface CutoffNotice {
 }
 
 export const enforceSafetyCutoffs = onSchedule("every 1 minutes", async () => {
+  await runSafetyCutoffScan("scheduler");
+});
+
+async function runSafetyCutoffScan(source: "scheduler" | "emulator"): Promise<void> {
   const snapshot = await db.collectionGroup("devices")
     .where("type", "==", "SAFETY_OUTLET")
     .where("status", "==", "ON")
@@ -191,10 +195,27 @@ export const enforceSafetyCutoffs = onSchedule("every 1 minutes", async () => {
     .filter((notice): notice is CutoffNotice => notice !== null);
   await Promise.all(notices.map(sendSafetyNotification));
   logger.info("Safety cutoff scan complete", {
+    source,
     scanned: snapshot.size,
     cutoffs: notices.length,
   });
-});
+}
+
+/**
+ * Cloud Scheduler is not emulated locally. Keep the production scheduler above,
+ * and run the same server-side scan while the Functions emulator is active.
+ */
+const runningInEmulator = process.env.FUNCTIONS_EMULATOR === "true"
+  || Boolean(process.env.FIRESTORE_EMULATOR_HOST);
+
+if (runningInEmulator) {
+  const localSafetyScan = setInterval(() => {
+    void runSafetyCutoffScan("emulator").catch((error: unknown) => {
+      logger.error("Local safety cutoff scan failed", {error});
+    });
+  }, 1_000);
+  localSafetyScan.unref();
+}
 
 async function enforceSafetyDevice(
   snapshot: FirebaseFirestore.QueryDocumentSnapshot,
